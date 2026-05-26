@@ -1,0 +1,46 @@
+import { createServer } from 'node:http';
+import { WebSocketServer } from 'ws';
+import { initWorker } from './mediasoup.js';
+import { handleConnection } from './signaling.js';
+
+const PORT = Number(process.env.PORT ?? 3001);
+
+function parseRoomId(reqUrl: string | undefined): string | null {
+  if (!reqUrl) return null;
+  const url = new URL(reqUrl, 'http://localhost');
+  const roomId = url.searchParams.get('roomId');
+  if (!roomId) return null;
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(roomId)) return null;
+  return roomId;
+}
+
+async function main() {
+  await initWorker();
+
+  const httpServer = createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('groupNow signaling server\n');
+  });
+
+  const wss = new WebSocketServer({ server: httpServer });
+  wss.on('connection', (socket, req) => {
+    const roomId = parseRoomId(req.url);
+    if (!roomId) {
+      socket.close(4400, 'missing or invalid roomId');
+      return;
+    }
+    handleConnection(socket, roomId).catch((err) => {
+      console.error('[server] handleConnection error:', err);
+      socket.close(1011, 'internal error');
+    });
+  });
+
+  httpServer.listen(PORT, () => {
+    console.log(`[server] WebSocket listening on ws://localhost:${PORT}`);
+  });
+}
+
+main().catch((err) => {
+  console.error('[server] fatal:', err);
+  process.exit(1);
+});
