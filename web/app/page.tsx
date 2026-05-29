@@ -1,7 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+
+interface Ring {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+}
+
+function useRandomRings(count = 6) {
+  const [rings, setRings] = useState<Ring[]>([]);
+  const nextId = useRef(0);
+
+  useEffect(() => {
+    function spawn(): Ring {
+      return {
+        id: nextId.current++,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 120 + 60,
+        duration: Math.random() * 2 + 2.5,
+        delay: 0,
+      };
+    }
+
+    const initial: Ring[] = Array.from({ length: count }, spawn);
+    setRings(initial);
+
+    const interval = setInterval(() => {
+      setRings(prev => {
+        const next = prev.slice(1);
+        next.push(spawn());
+        return next;
+      });
+    }, 900);
+
+    return () => clearInterval(interval);
+  }, [count]);
+
+  return rings;
+}
 
 function randomRoomId(): string {
   const bytes = new Uint8Array(6);
@@ -12,6 +54,7 @@ function randomRoomId(): string {
 export default function Landing() {
   const router = useRouter();
   const [input, setInput] = useState('');
+  const rings = useRandomRings(6);
 
   function createRoom() {
     router.push(`/rooms/${randomRoomId()}`);
@@ -30,8 +73,34 @@ export default function Landing() {
 
   return (
     <main style={styles.main}>
+      <style>{`
+        @keyframes ringPulse {
+          0%   { transform: scale(0.2); opacity: 1; }
+          60%  { opacity: 0.6; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
+      `}</style>
+
       {/* Left panel */}
       <div style={styles.left}>
+        {rings.map(r => (
+          <div
+            key={r.id}
+            style={{
+              position: 'absolute',
+              left: `${r.x}%`,
+              top: `${r.y}%`,
+              width: r.size,
+              height: r.size,
+              marginLeft: -r.size / 2,
+              marginTop: -r.size / 2,
+              borderRadius: '50%',
+              border: '1.5px solid rgba(255,255,255,0.55)',
+              animation: `ringPulse ${r.duration}s ease-out forwards`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
         <div style={styles.leftContent}>
           <div style={styles.iconWrap}>
             <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2}>
