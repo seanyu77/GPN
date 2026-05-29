@@ -25,7 +25,12 @@ export default function RoomPage() {
   const [status, setStatus] = useState('idle');
   const [sharingScreen, setSharingScreen] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const roomRef = useRef<Room | null>(null);
+
+  function toggleExpand(k: string) {
+    setExpandedKey((prev) => (prev === k ? null : k));
+  }
 
   useEffect(() => {
     if (!roomId) return;
@@ -156,9 +161,9 @@ export default function RoomPage() {
           gap: 12,
         }}
       >
-        <VideoTile label="You" videoRef={localVideoRef} muted mirror audioEnabled={audioEnabled} onToggleMic={toggleMic} />
+        <VideoTile label="You" videoRef={localVideoRef} muted mirror audioEnabled={audioEnabled} onToggleMic={toggleMic} expanded={expandedKey === 'local'} onExpand={() => toggleExpand('local')} />
         {screenStream && (
-          <VideoTile label="You (screen)" stream={screenStream} muted />
+          <VideoTile label="You (screen)" stream={screenStream} muted expanded={expandedKey === 'screen'} onExpand={() => toggleExpand('screen')} objectFit="contain" />
         )}
         {[...remoteStreams.values()].map(({ peerId, source, stream }) => (
           <RemoteTile
@@ -166,6 +171,8 @@ export default function RoomPage() {
             peerId={peerId}
             source={source}
             stream={stream}
+            expanded={expandedKey === key(peerId, source)}
+            onExpand={() => toggleExpand(key(peerId, source))}
           />
         ))}
       </div>
@@ -182,6 +189,9 @@ function VideoTile({
   mirror,
   audioEnabled = true,
   onToggleMic,
+  expanded,
+  onExpand,
+  objectFit = 'cover',
 }: {
   label: string;
   videoRef?: React.RefObject<HTMLVideoElement>;
@@ -190,6 +200,9 @@ function VideoTile({
   mirror?: boolean;
   audioEnabled?: boolean;
   onToggleMic?: () => void;
+  expanded?: boolean;
+  onExpand?: () => void;
+  objectFit?: React.CSSProperties['objectFit'];
 }) {
   const internalRef = useRef<HTMLVideoElement>(null);
   const ref = videoRef ?? internalRef;
@@ -197,15 +210,16 @@ function VideoTile({
     if (!stream || !ref.current) return;
     ref.current.srcObject = stream;
   }, [stream, ref]);
+  const vStyle = { ...videoStyle, objectFit };
   return (
-    <div style={tileStyle}>
-      <video ref={ref} autoPlay playsInline muted={muted} style={mirror ? { ...videoStyle, transform: 'scaleX(-1)' } : videoStyle} />
+    <div style={{ ...tileStyle, ...(expanded ? expandedTileStyle : {}) }} onClick={onExpand} role="button" tabIndex={0}>
+      <video ref={ref} autoPlay playsInline muted={muted} style={mirror ? { ...vStyle, transform: 'scaleX(-1)' } : vStyle} />
       <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
         <span style={labelStyle}>{label}</span>
       </div>
       {onToggleMic && (
         <button
-          onClick={onToggleMic}
+          onClick={(e) => { e.stopPropagation(); onToggleMic(); }}
           title={audioEnabled ? 'Mute' : 'Unmute'}
           style={{ ...iconBtnStyle, ...(audioEnabled ? {} : iconBtnOffOverride), position: 'absolute', bottom: 8, right: 8, width: 36, height: 36 }}
         >
@@ -220,10 +234,14 @@ function RemoteTile({
   peerId,
   source,
   stream,
+  expanded,
+  onExpand,
 }: {
   peerId: string;
   source: StreamSource;
   stream: MediaStream;
+  expanded?: boolean;
+  onExpand?: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -240,9 +258,10 @@ function RemoteTile({
       stream.removeEventListener('removetrack', resync);
     };
   }, [stream]);
+  const vStyle: React.CSSProperties = { ...videoStyle, objectFit: source === 'screen' ? 'contain' : 'cover' };
   return (
-    <div style={tileStyle}>
-      <video ref={ref} autoPlay playsInline style={videoStyle} />
+    <div style={{ ...tileStyle, ...(expanded ? expandedTileStyle : {}) }} onClick={onExpand} role="button" tabIndex={0}>
+      <video ref={ref} autoPlay playsInline style={vStyle} />
       <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
         <span style={labelStyle}>{peerId.slice(0, 8)}</span>
       </div>
@@ -256,6 +275,12 @@ const tileStyle: React.CSSProperties = {
   borderRadius: 8,
   overflow: 'hidden',
   aspectRatio: '16 / 9',
+  cursor: 'pointer',
+};
+
+const expandedTileStyle: React.CSSProperties = {
+  gridColumn: '1 / -1',
+  order: -1,
 };
 
 const videoStyle: React.CSSProperties = {
