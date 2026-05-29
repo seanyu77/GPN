@@ -1,11 +1,11 @@
 # GP reverse proxy — automatic HTTPS via Let's Encrypt.
-# Replace app.example.com with your domain (deploy.sh does this for you).
+# Domain is gpn.senadn.com (deploy.sh re-renders this if you override DOMAIN).
 #
 # IMPORTANT: only the signaling WebSocket and the web UI go through here.
 # WebRTC media (RTP) flows directly over UDP/TCP 40000-49999 to the public IP
 # and is encrypted by mediasoup itself (DTLS-SRTP) — it does NOT pass through Caddy.
 
-app.example.com {
+gpn.senadn.com {
 	# Signaling WebSocket -> mediasoup server. Caddy upgrades ws automatically.
 	handle /ws* {
 		reverse_proxy localhost:3001

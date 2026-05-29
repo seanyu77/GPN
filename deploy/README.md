@@ -21,7 +21,7 @@ WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
 
 1. **VPS**：Ubuntu 22.04/24.04，2 vCPU / 2–4 GB，**公開 IPv4**。
    （Hetzner / DigitalOcean / Vultr / Linode / EC2 皆可。）
-2. **網域**：A record 指向 VPS 公開 IP，例如 `app.你的網域 → 203.0.113.10`。
+2. **網域**：A record 指向 VPS 公開 IP，本專案為 `gpn.senadn.com → 167.179.113.227`（Cloudflare 設為 DNS only / 灰色雲朵，**不要開橘色 proxy**，否則 WebRTC 媒體連不上、Caddy 也簽不出憑證）。
 3. **雲商安全群組/防火牆**要放行：`22, 80, 443/tcp` 以及 `40000-49999` 的 **udp 與 tcp**。
    （AWS/GCP 預設會擋媒體 port，務必手動加規則。）
 
@@ -30,10 +30,13 @@ WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
 在 VPS 上以 root 執行：
 
 ```bash
-git clone <你的 repo> /opt/gp-src
+git clone https://github.com/seanyu77/GP.git /opt/gp-src
 cd /opt/gp-src
-sudo PUBLIC_IP=203.0.113.10 DOMAIN=app.你的網域 bash deploy/deploy.sh
+sudo bash deploy/deploy.sh
 ```
+
+> 預設值已寫死為 `gpn.senadn.com` / `167.179.113.227`。要換成別的網域/IP 才需要帶環境變數：
+> `sudo PUBLIC_IP=203.0.113.10 DOMAIN=app.mydomain.com bash deploy/deploy.sh`
 
 腳本會：安裝 Node 20 + Caddy（若缺）→ 建立 `gp` 使用者 → 同步原始碼到 `/opt/gp`
 → build server 與 web（把 `wss://<DOMAIN>/ws` 編進前端）→ 安裝 systemd 服務與 Caddyfile
@@ -46,8 +49,8 @@ systemctl status gp-server gp-web caddy
 journalctl -u gp-server -f          # 看 mediasoup / 訊令 log
 ```
 
-1. 瀏覽 `https://app.你的網域`，憑證為綠鎖。
-2. 開**兩個分頁**進同一房間 `https://app.你的網域/rooms/test` → 兩邊互看得到影像。
+1. 瀏覽 `https://gpn.senadn.com`，憑證為綠鎖。
+2. 開**兩個分頁**進同一房間 `https://gpn.senadn.com/rooms/test` → 兩邊互看得到影像。
 3. `chrome://webrtc-internals` 確認 ICE candidate 的 IP 是**公開 IP**（不是 127.0.0.1）。
 
 ## 疑難排解
@@ -63,9 +66,9 @@ journalctl -u gp-server -f          # 看 mediasoup / 訊令 log
 
 1. 安裝 Node 20、Caddy。
 2. `cd server && npm ci && npm run build`
-3. `cd web && npm ci && NEXT_PUBLIC_SIGNALING_URL=wss://app.你的網域/ws npm run build`
-4. 把 `deploy/gp-*.service` 複製到 `/etc/systemd/system/`，將 `YOUR_PUBLIC_IP` 換成公開 IP。
-5. 把 `deploy/Caddyfile` 複製到 `/etc/caddy/Caddyfile`，將 `app.example.com` 換成你的網域。
+3. `cd web && npm ci && NEXT_PUBLIC_SIGNALING_URL=wss://gpn.senadn.com/ws npm run build`
+4. 把 `deploy/gp-*.service` 複製到 `/etc/systemd/system/`（`MEDIASOUP_ANNOUNCED_IP` 已是 `167.179.113.227`）。
+5. 把 `deploy/Caddyfile` 複製到 `/etc/caddy/Caddyfile`（網域已是 `gpn.senadn.com`）。
 6. 開防火牆（見前置條件），`systemctl enable --now gp-server gp-web`、`systemctl reload caddy`。
 
 ## 已知限制（小規模可接受）
