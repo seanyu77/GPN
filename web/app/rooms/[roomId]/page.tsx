@@ -145,7 +145,7 @@ export default function RoomPage() {
           gap: 12,
         }}
       >
-        <VideoTile label="You (camera)" videoRef={localVideoRef} muted />
+        <VideoTile label="You (camera)" videoRef={localVideoRef} muted mirror />
         {screenStream && (
           <VideoTile label="You (screen)" stream={screenStream} muted />
         )}
@@ -167,11 +167,13 @@ function VideoTile({
   videoRef,
   stream,
   muted,
+  mirror,
 }: {
   label: string;
   videoRef?: React.RefObject<HTMLVideoElement>;
   stream?: MediaStream;
   muted?: boolean;
+  mirror?: boolean;
 }) {
   const internalRef = useRef<HTMLVideoElement>(null);
   const ref = videoRef ?? internalRef;
@@ -181,7 +183,7 @@ function VideoTile({
   }, [stream, ref]);
   return (
     <div style={tileStyle}>
-      <video ref={ref} autoPlay playsInline muted={muted} style={videoStyle} />
+      <video ref={ref} autoPlay playsInline muted={muted} style={mirror ? { ...videoStyle, transform: 'scaleX(-1)' } : videoStyle} />
       <div style={labelStyle}>{label}</div>
     </div>
   );
