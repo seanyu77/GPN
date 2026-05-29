@@ -53,6 +53,48 @@ journalctl -u gpn-server -f          # 看 mediasoup / 訊令 log
 2. 開**兩個分頁**進同一房間 `https://gpn.senadn.com/rooms/test` → 兩邊互看得到影像。
 3. `chrome://webrtc-internals` 確認 ICE candidate 的 IP 是**公開 IP**（不是 127.0.0.1）。
 
+## 重新部署 / 更新
+
+`deploy.sh` 可重複執行：會重新同步原始碼、重新 build、重裝設定並重啟服務。
+
+**一般更新（服務名稱沒變）** — 在 VPS 上以 root：
+
+```bash
+cd /opt/gpn-src && git pull
+sudo bash deploy/deploy.sh
+```
+
+> ⚠️ build 期間有一段服務中斷：mediasoup 的 C++ worker 要原生編譯，在 2 vCPU 小機器上以 `-j 1` 跑可能要十幾分鐘。期間 server 會重啟，**進行中的通話會全斷**（rooms 在記憶體，本來重啟就會斷）。
+
+**改了專案/服務名稱時（例如 `gp` → `gpn`）** — 新舊服務都綁同樣的 3000/3001 port，必須先停舊的再部署，否則新服務 build 完起不來：
+
+```bash
+# 1. 停掉並 disable 舊服務（釋出 3000/3001）
+sudo systemctl disable --now gp-server.service gp-web.service
+
+# 2. 取得最新程式碼（repo 也改名時重新 clone 較乾淨）
+sudo git clone https://github.com/seanyu77/GPN.git /opt/gpn-src
+cd /opt/gpn-src
+
+# 3. 跑部署（建立新的 gpn 使用者 / /opt/gpn / gpn-* 服務）
+sudo bash deploy/deploy.sh
+```
+
+部署後跑一次「驗收」確認 `gpn-*` 服務 active、`https://<DOMAIN>` 回 200，再做下面的清理。
+
+## 清理舊命名殘留
+
+改名後舊的 `gp-*` 服務、目錄、使用者已停用但仍佔空間/易混淆，確認新部署正常後再以 root 清掉（**不可逆**）：
+
+```bash
+sudo rm -f /etc/systemd/system/gp-server.service /etc/systemd/system/gp-web.service
+sudo systemctl daemon-reload
+sudo rm -rf /opt/gp /opt/gp-src
+sudo userdel -r gp 2>/dev/null || true
+```
+
+> 驗證時小心 glob：`ls /opt/gp*` 會連新的 `/opt/gpn`、`/opt/gpn-src` 一起列出。要逐一確認 `/opt/gp`、`/opt/gp-src` 已消失、而 `/opt/gpn*` 仍在。
+
 ## 疑難排解
 
 | 症狀 | 原因 / 處理 |
