@@ -39,7 +39,7 @@ export default function Landing() {
       }}
     >
       <div style={{ width: '100%', maxWidth: 380 }}>
-        <h1 style={{ fontSize: 28, margin: '0 0 4px' }}>GP</h1>
+        <h1 style={{ fontSize: 28, margin: '0 0 4px' }}>GPN</h1>
         <p style={{ margin: '0 0 24px', opacity: 0.7, fontSize: 14 }}>
           WebRTC 多人視訊（mediasoup SFU）
         </p>

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# GP one-shot deploy — single VPS, all-in-one (Ubuntu 22.04/24.04).
+# GPN one-shot deploy — single VPS, all-in-one (Ubuntu 22.04/24.04).
 #
 # Run on the VPS, as root, from a clone of this repo:
 #
-#   git clone https://github.com/seanyu77/GP.git /opt/gp-src && cd /opt/gp-src
+#   git clone https://github.com/seanyu77/GPN.git /opt/gpn-src && cd /opt/gpn-src
 #   sudo bash deploy/deploy.sh
 #
 # Defaults are baked in for gpn.senadn.com / 167.179.113.227. Override per-run with:
@@ -18,8 +18,8 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 PUBLIC_IP="${PUBLIC_IP:-167.179.113.227}"
 DOMAIN="${DOMAIN:-gpn.senadn.com}"
-APP_USER="gp"
-APP_DIR="/opt/gp"
+APP_USER="gpn"
+APP_DIR="/opt/gpn"
 NODE_MAJOR=20
 
 SIGNALING_URL="wss://${DOMAIN}/ws"
@@ -76,9 +76,9 @@ sudo -u "$APP_USER" bash -c "cd '${APP_DIR}/web' && npm ci && NEXT_PUBLIC_SIGNAL
 # 4. systemd units (render placeholders) + Caddyfile.
 # ---------------------------------------------------------------------------
 log "Installing systemd units"
-sed "s|167.179.113.227|${PUBLIC_IP}|g" "${REPO_ROOT}/deploy/gp-server.service" \
-  > /etc/systemd/system/gp-server.service
-cp "${REPO_ROOT}/deploy/gp-web.service" /etc/systemd/system/gp-web.service
+sed "s|167.179.113.227|${PUBLIC_IP}|g" "${REPO_ROOT}/deploy/gpn-server.service" \
+  > /etc/systemd/system/gpn-server.service
+cp "${REPO_ROOT}/deploy/gpn-web.service" /etc/systemd/system/gpn-web.service
 
 log "Installing Caddyfile"
 sed "s|gpn.senadn.com|${DOMAIN}|g" "${REPO_ROOT}/deploy/Caddyfile" > /etc/caddy/Caddyfile
@@ -103,11 +103,11 @@ fi
 # ---------------------------------------------------------------------------
 log "Starting services"
 systemctl daemon-reload
-systemctl enable --now gp-server.service gp-web.service
+systemctl enable --now gpn-server.service gpn-web.service
 systemctl reload caddy || systemctl restart caddy
 
 log "Done. Verify:"
-echo "  - systemctl status gp-server gp-web caddy"
+echo "  - systemctl status gpn-server gpn-web caddy"
 echo "  - open https://${DOMAIN}  then a room at https://${DOMAIN}/rooms/test in two tabs"
 echo "  - REMINDER: DNS A record for ${DOMAIN} must point to ${PUBLIC_IP}, and"
 echo "    your cloud security group must allow 40000-49999 udp+tcp."

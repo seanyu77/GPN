@@ -1,14 +1,14 @@
 [Unit]
-Description=GP web (Next.js)
+Description=GPN web (Next.js)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=gp
-WorkingDirectory=/opt/gp/web
+User=gpn
+WorkingDirectory=/opt/gpn/web
 # NEXT_PUBLIC_SIGNALING_URL is baked in at build time, not needed here.
-ExecStart=/opt/gp/web/node_modules/.bin/next start -p 3000
+ExecStart=/opt/gpn/web/node_modules/.bin/next start -p 3000
 Restart=on-failure
 RestartSec=3
 

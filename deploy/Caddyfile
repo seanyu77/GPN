@@ -1,4 +1,4 @@
-# GP reverse proxy — automatic HTTPS via Let's Encrypt.
+# GPN reverse proxy — automatic HTTPS via Let's Encrypt.
 # Domain is gpn.senadn.com (deploy.sh re-renders this if you override DOMAIN).
 #
 # IMPORTANT: only the signaling WebSocket and the web UI go through here.

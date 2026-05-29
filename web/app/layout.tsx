@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'GP',
+  title: 'GPN',
   description: 'WebRTC video call (mediasoup SFU)',
 };
 

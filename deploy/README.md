@@ -1,4 +1,4 @@
-# GP 部署指南（單一 VPS · 全包 · 小規模）
+# GPN 部署指南（單一 VPS · 全包 · 小規模）
 
 一台有公開 IP 的 VPS 上同時跑：mediasoup 訊令 server、Next.js web、Caddy 反向代理（自動 TLS）。
 WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
@@ -30,23 +30,23 @@ WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
 在 VPS 上以 root 執行：
 
 ```bash
-git clone https://github.com/seanyu77/GP.git /opt/gp-src
-cd /opt/gp-src
+git clone https://github.com/seanyu77/GPN.git /opt/gpn-src
+cd /opt/gpn-src
 sudo bash deploy/deploy.sh
 ```
 
 > 預設值已寫死為 `gpn.senadn.com` / `167.179.113.227`。要換成別的網域/IP 才需要帶環境變數：
 > `sudo PUBLIC_IP=203.0.113.10 DOMAIN=app.mydomain.com bash deploy/deploy.sh`
 
-腳本會：安裝 Node 20 + Caddy（若缺）→ 建立 `gp` 使用者 → 同步原始碼到 `/opt/gp`
+腳本會：安裝 Node 20 + Caddy（若缺）→ 建立 `gpn` 使用者 → 同步原始碼到 `/opt/gpn`
 → build server 與 web（把 `wss://<DOMAIN>/ws` 編進前端）→ 安裝 systemd 服務與 Caddyfile
 → 設定 UFW → 啟動所有服務。可重複執行（會重新 build 並重啟）。
 
 ## 驗收
 
 ```bash
-systemctl status gp-server gp-web caddy
-journalctl -u gp-server -f          # 看 mediasoup / 訊令 log
+systemctl status gpn-server gpn-web caddy
+journalctl -u gpn-server -f          # 看 mediasoup / 訊令 log
 ```
 
 1. 瀏覽 `https://gpn.senadn.com`，憑證為綠鎖。
@@ -67,9 +67,9 @@ journalctl -u gp-server -f          # 看 mediasoup / 訊令 log
 1. 安裝 Node 20、Caddy。
 2. `cd server && npm ci && npm run build`
 3. `cd web && npm ci && NEXT_PUBLIC_SIGNALING_URL=wss://gpn.senadn.com/ws npm run build`
-4. 把 `deploy/gp-*.service` 複製到 `/etc/systemd/system/`（`MEDIASOUP_ANNOUNCED_IP` 已是 `167.179.113.227`）。
+4. 把 `deploy/gpn-*.service` 複製到 `/etc/systemd/system/`（`MEDIASOUP_ANNOUNCED_IP` 已是 `167.179.113.227`）。
 5. 把 `deploy/Caddyfile` 複製到 `/etc/caddy/Caddyfile`（網域已是 `gpn.senadn.com`）。
-6. 開防火牆（見前置條件），`systemctl enable --now gp-server gp-web`、`systemctl reload caddy`。
+6. 開防火牆（見前置條件），`systemctl enable --now gpn-server gpn-web`、`systemctl reload caddy`。
 
 ## 已知限制（小規模可接受）
 
