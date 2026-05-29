@@ -1,4 +1,4 @@
-# groupNow 部署指南（單一 VPS · 全包 · 小規模）
+# GP 部署指南（單一 VPS · 全包 · 小規模）
 
 一台有公開 IP 的 VPS 上同時跑：mediasoup 訊令 server、Next.js web、Caddy 反向代理（自動 TLS）。
 WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
@@ -30,20 +30,20 @@ WebRTC 媒體（RTP）直接走 UDP/TCP 到公開 IP，不經過 Caddy。
 在 VPS 上以 root 執行：
 
 ```bash
-git clone <你的 repo> /opt/groupnow-src
-cd /opt/groupnow-src
+git clone <你的 repo> /opt/gp-src
+cd /opt/gp-src
 sudo PUBLIC_IP=203.0.113.10 DOMAIN=app.你的網域 bash deploy/deploy.sh
 ```
 
-腳本會：安裝 Node 20 + Caddy（若缺）→ 建立 `groupnow` 使用者 → 同步原始碼到 `/opt/groupnow`
+腳本會：安裝 Node 20 + Caddy（若缺）→ 建立 `gp` 使用者 → 同步原始碼到 `/opt/gp`
 → build server 與 web（把 `wss://<DOMAIN>/ws` 編進前端）→ 安裝 systemd 服務與 Caddyfile
 → 設定 UFW → 啟動所有服務。可重複執行（會重新 build 並重啟）。
 
 ## 驗收
 
 ```bash
-systemctl status groupnow-server groupnow-web caddy
-journalctl -u groupnow-server -f          # 看 mediasoup / 訊令 log
+systemctl status gp-server gp-web caddy
+journalctl -u gp-server -f          # 看 mediasoup / 訊令 log
 ```
 
 1. 瀏覽 `https://app.你的網域`，憑證為綠鎖。
@@ -64,9 +64,9 @@ journalctl -u groupnow-server -f          # 看 mediasoup / 訊令 log
 1. 安裝 Node 20、Caddy。
 2. `cd server && npm ci && npm run build`
 3. `cd web && npm ci && NEXT_PUBLIC_SIGNALING_URL=wss://app.你的網域/ws npm run build`
-4. 把 `deploy/groupnow-*.service` 複製到 `/etc/systemd/system/`，將 `YOUR_PUBLIC_IP` 換成公開 IP。
+4. 把 `deploy/gp-*.service` 複製到 `/etc/systemd/system/`，將 `YOUR_PUBLIC_IP` 換成公開 IP。
 5. 把 `deploy/Caddyfile` 複製到 `/etc/caddy/Caddyfile`，將 `app.example.com` 換成你的網域。
-6. 開防火牆（見前置條件），`systemctl enable --now groupnow-server groupnow-web`、`systemctl reload caddy`。
+6. 開防火牆（見前置條件），`systemctl enable --now gp-server gp-web`、`systemctl reload caddy`。
 
 ## 已知限制（小規模可接受）
 

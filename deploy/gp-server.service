@@ -1,12 +1,12 @@
 [Unit]
-Description=groupNow mediasoup signaling server
+Description=GP mediasoup signaling server
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=groupnow
-WorkingDirectory=/opt/groupnow/server
+User=gp
+WorkingDirectory=/opt/gp/server
 ExecStart=/usr/bin/node dist/index.js
 Restart=on-failure
 RestartSec=3

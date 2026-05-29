@@ -1,4 +1,4 @@
-# groupNow reverse proxy — automatic HTTPS via Let's Encrypt.
+# GP reverse proxy — automatic HTTPS via Let's Encrypt.
 # Replace app.example.com with your domain (deploy.sh does this for you).
 #
 # IMPORTANT: only the signaling WebSocket and the web UI go through here.

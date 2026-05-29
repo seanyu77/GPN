@@ -19,7 +19,7 @@ async function main() {
 
   const httpServer = createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('groupNow signaling server\n');
+    res.end('GP signaling server\n');
   });
 
   const wss = new WebSocketServer({ server: httpServer });

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# groupNow one-shot deploy — single VPS, all-in-one (Ubuntu 22.04/24.04).
+# GP one-shot deploy — single VPS, all-in-one (Ubuntu 22.04/24.04).
 #
 # Run on the VPS, as root, from a clone of this repo:
 #
-#   git clone <repo> /opt/groupnow-src && cd /opt/groupnow-src
+#   git clone <repo> /opt/gp-src && cd /opt/gp-src
 #   sudo PUBLIC_IP=203.0.113.10 DOMAIN=app.mydomain.com bash deploy/deploy.sh
 #
 # Re-runnable: rebuilds, re-renders config, and restarts the services.
@@ -15,8 +15,8 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 PUBLIC_IP="${PUBLIC_IP:-YOUR_PUBLIC_IP}"
 DOMAIN="${DOMAIN:-app.example.com}"
-APP_USER="groupnow"
-APP_DIR="/opt/groupnow"
+APP_USER="gp"
+APP_DIR="/opt/gp"
 NODE_MAJOR=20
 
 SIGNALING_URL="wss://${DOMAIN}/ws"
@@ -73,9 +73,9 @@ sudo -u "$APP_USER" bash -c "cd '${APP_DIR}/web' && npm ci && NEXT_PUBLIC_SIGNAL
 # 4. systemd units (render placeholders) + Caddyfile.
 # ---------------------------------------------------------------------------
 log "Installing systemd units"
-sed "s|YOUR_PUBLIC_IP|${PUBLIC_IP}|g" "${REPO_ROOT}/deploy/groupnow-server.service" \
-  > /etc/systemd/system/groupnow-server.service
-cp "${REPO_ROOT}/deploy/groupnow-web.service" /etc/systemd/system/groupnow-web.service
+sed "s|YOUR_PUBLIC_IP|${PUBLIC_IP}|g" "${REPO_ROOT}/deploy/gp-server.service" \
+  > /etc/systemd/system/gp-server.service
+cp "${REPO_ROOT}/deploy/gp-web.service" /etc/systemd/system/gp-web.service
 
 log "Installing Caddyfile"
 sed "s|app.example.com|${DOMAIN}|g" "${REPO_ROOT}/deploy/Caddyfile" > /etc/caddy/Caddyfile
@@ -100,11 +100,11 @@ fi
 # ---------------------------------------------------------------------------
 log "Starting services"
 systemctl daemon-reload
-systemctl enable --now groupnow-server.service groupnow-web.service
+systemctl enable --now gp-server.service gp-web.service
 systemctl reload caddy || systemctl restart caddy
 
 log "Done. Verify:"
-echo "  - systemctl status groupnow-server groupnow-web caddy"
+echo "  - systemctl status gp-server gp-web caddy"
 echo "  - open https://${DOMAIN}  then a room at https://${DOMAIN}/rooms/test in two tabs"
 echo "  - REMINDER: DNS A record for ${DOMAIN} must point to ${PUBLIC_IP}, and"
 echo "    your cloud security group must allow 40000-49999 udp+tcp."
