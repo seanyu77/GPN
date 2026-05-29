@@ -17,7 +17,7 @@ export default function RoomPage() {
   const roomId = params.roomId;
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const localScreenRef = useRef<HTMLVideoElement>(null);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<StreamKey, { peerId: string; source: StreamSource; stream: MediaStream }>>(
     new Map(),
   );
@@ -92,15 +92,15 @@ export default function RoomPage() {
     if (!room) return;
     if (sharingScreen) {
       await room.stopScreenShare();
-      if (localScreenRef.current) localScreenRef.current.srcObject = null;
+      setScreenStream(null);
       setSharingScreen(false);
     } else {
       try {
-        const screenStream = await room.shareScreen();
-        if (localScreenRef.current) localScreenRef.current.srcObject = screenStream;
+        const stream = await room.shareScreen();
+        setScreenStream(stream);
         setSharingScreen(true);
-        screenStream.getVideoTracks()[0]?.addEventListener('ended', () => {
-          if (localScreenRef.current) localScreenRef.current.srcObject = null;
+        stream.getVideoTracks()[0]?.addEventListener('ended', () => {
+          setScreenStream(null);
           setSharingScreen(false);
         });
       } catch (err: any) {
@@ -122,18 +122,18 @@ export default function RoomPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 20 }}>房間：{roomId}</h1>
+          <h1 style={{ margin: 0, fontSize: 20 }}>Room: {roomId}</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, opacity: 0.7 }}>status: {status}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={toggleScreenShare} style={sharingScreen ? activeBtnStyle : btnStyle}>
-            {sharingScreen ? '停止分享' : '分享螢幕'}
+            {sharingScreen ? 'Stop sharing' : 'Share screen'}
           </button>
           <button onClick={copyInviteLink} style={btnStyle}>
-            複製房間連結
+            Copy room link
           </button>
           <button onClick={() => router.push('/')} style={btnStyle}>
-            離開
+            Leave
           </button>
         </div>
       </header>
@@ -146,8 +146,8 @@ export default function RoomPage() {
         }}
       >
         <VideoTile label="You (camera)" videoRef={localVideoRef} muted />
-        {sharingScreen && (
-          <VideoTile label="You (screen)" videoRef={localScreenRef} muted />
+        {screenStream && (
+          <VideoTile label="You (screen)" stream={screenStream} muted />
         )}
         {[...remoteStreams.values()].map(({ peerId, source, stream }) => (
           <RemoteTile
@@ -165,15 +165,23 @@ export default function RoomPage() {
 function VideoTile({
   label,
   videoRef,
+  stream,
   muted,
 }: {
   label: string;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef?: React.RefObject<HTMLVideoElement>;
+  stream?: MediaStream;
   muted?: boolean;
 }) {
+  const internalRef = useRef<HTMLVideoElement>(null);
+  const ref = videoRef ?? internalRef;
+  useEffect(() => {
+    if (!stream || !ref.current) return;
+    ref.current.srcObject = stream;
+  }, [stream, ref]);
   return (
     <div style={tileStyle}>
-      <video ref={videoRef} autoPlay playsInline muted={muted} style={videoStyle} />
+      <video ref={ref} autoPlay playsInline muted={muted} style={videoStyle} />
       <div style={labelStyle}>{label}</div>
     </div>
   );
@@ -249,7 +257,7 @@ const btnStyle: React.CSSProperties = {
 
 const activeBtnStyle: React.CSSProperties = {
   ...btnStyle,
-  background: '#3b82f6',
-  borderColor: '#3b82f6',
-  color: '#fff',
+  background: '#facc15',
+  borderColor: '#facc15',
+  color: '#111',
 };

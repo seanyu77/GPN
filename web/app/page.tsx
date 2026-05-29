@@ -22,7 +22,7 @@ export default function Landing() {
     const trimmed = input.trim();
     if (!trimmed) return;
     if (!/^[a-zA-Z0-9_-]{1,64}$/.test(trimmed)) {
-      alert('房號只能用英數字、底線、減號，最多 64 字');
+      alert('Room ID may only contain letters, numbers, underscores, and hyphens (max 64 characters)');
       return;
     }
     router.push(`/rooms/${trimmed}`);
@@ -36,16 +36,17 @@ export default function Landing() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: 16,
+        boxSizing: 'border-box',
       }}
     >
       <div style={{ width: '100%', maxWidth: 380 }}>
-        <h1 style={{ fontSize: 28, margin: '0 0 4px' }}>GPN</h1>
+        <h1 style={{ fontSize: 28, margin: '0 0 4px' }}>Start a video chat now!</h1>
         <p style={{ margin: '0 0 24px', opacity: 0.7, fontSize: 14 }}>
-          WebRTC 多人視訊（mediasoup SFU）
+          No sign-up required. Just create a room and share the link with your friends.
         </p>
 
         <button onClick={createRoom} style={primaryBtn}>
-          建立新房間
+          Create new room
         </button>
 
         <div
@@ -59,7 +60,7 @@ export default function Landing() {
           }}
         >
           <div style={{ flex: 1, height: 1, background: '#333' }} />
-          或
+          or
           <div style={{ flex: 1, height: 1, background: '#333' }} />
         </div>
 
@@ -67,11 +68,11 @@ export default function Landing() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="輸入房號加入"
+            placeholder="Enter room ID to join"
             style={inputStyle}
           />
           <button type="submit" style={{ ...primaryBtn, marginTop: 8 }}>
-            加入
+            Join
           </button>
         </form>
       </div>
@@ -81,8 +82,8 @@ export default function Landing() {
 
 const primaryBtn: React.CSSProperties = {
   width: '100%',
-  background: '#3b82f6',
-  color: '#fff',
+  background: '#facc15',
+  color: '#111',
   border: 'none',
   borderRadius: 8,
   padding: '12px 16px',
