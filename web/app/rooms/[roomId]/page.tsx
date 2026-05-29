@@ -17,12 +17,14 @@ export default function RoomPage() {
   const roomId = params.roomId;
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<StreamKey, { peerId: string; source: StreamSource; stream: MediaStream }>>(
     new Map(),
   );
   const [status, setStatus] = useState('idle');
   const [sharingScreen, setSharingScreen] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function RoomPage() {
           localStream.getTracks().forEach((t) => t.stop());
           return;
         }
+        localStreamRef.current = localStream;
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = localStream;
         }
@@ -81,6 +84,14 @@ export default function RoomPage() {
       roomRef.current = null;
     };
   }, [roomId]);
+
+  function toggleMic() {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const next = !audioEnabled;
+    stream.getAudioTracks().forEach((t) => { t.enabled = next; });
+    setAudioEnabled(next);
+  }
 
   function copyInviteLink() {
     const link = `${window.location.origin}/rooms/${roomId}`;
@@ -145,7 +156,7 @@ export default function RoomPage() {
           gap: 12,
         }}
       >
-        <VideoTile label="You (camera)" videoRef={localVideoRef} muted mirror />
+        <VideoTile label="You" videoRef={localVideoRef} muted mirror audioEnabled={audioEnabled} onToggleMic={toggleMic} />
         {screenStream && (
           <VideoTile label="You (screen)" stream={screenStream} muted />
         )}
@@ -158,6 +169,7 @@ export default function RoomPage() {
           />
         ))}
       </div>
+
     </main>
   );
 }
@@ -168,12 +180,16 @@ function VideoTile({
   stream,
   muted,
   mirror,
+  audioEnabled = true,
+  onToggleMic,
 }: {
   label: string;
   videoRef?: React.RefObject<HTMLVideoElement>;
   stream?: MediaStream;
   muted?: boolean;
   mirror?: boolean;
+  audioEnabled?: boolean;
+  onToggleMic?: () => void;
 }) {
   const internalRef = useRef<HTMLVideoElement>(null);
   const ref = videoRef ?? internalRef;
@@ -184,7 +200,18 @@ function VideoTile({
   return (
     <div style={tileStyle}>
       <video ref={ref} autoPlay playsInline muted={muted} style={mirror ? { ...videoStyle, transform: 'scaleX(-1)' } : videoStyle} />
-      <div style={labelStyle}>{label}</div>
+      <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
+        <span style={labelStyle}>{label}</span>
+      </div>
+      {onToggleMic && (
+        <button
+          onClick={onToggleMic}
+          title={audioEnabled ? 'Mute' : 'Unmute'}
+          style={{ ...iconBtnStyle, ...(audioEnabled ? {} : iconBtnOffOverride), position: 'absolute', bottom: 8, right: 8, width: 36, height: 36 }}
+        >
+          <span className="material-icons" style={{ fontSize: 20 }}>{audioEnabled ? 'mic' : 'mic_off'}</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -216,8 +243,8 @@ function RemoteTile({
   return (
     <div style={tileStyle}>
       <video ref={ref} autoPlay playsInline style={videoStyle} />
-      <div style={labelStyle}>
-        peer: {peerId.slice(0, 8)} ({source})
+      <div style={{ position: 'absolute', bottom: 8, left: 8 }}>
+        <span style={labelStyle}>{peerId.slice(0, 8)}</span>
       </div>
     </div>
   );
@@ -238,13 +265,31 @@ const videoStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  position: 'absolute',
   bottom: 8,
   left: 8,
   fontSize: 12,
   background: 'rgba(0,0,0,0.6)',
   padding: '2px 6px',
   borderRadius: 4,
+};
+
+const iconBtnStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 48,
+  height: 48,
+  borderRadius: '50%',
+  border: 'none',
+  background: '#3a3a3a',
+  color: '#eee',
+  cursor: 'pointer',
+  fontSize: 24,
+};
+
+const iconBtnOffOverride: React.CSSProperties = {
+  background: '#e53e3e',
+  color: '#fff',
 };
 
 const btnStyle: React.CSSProperties = {
