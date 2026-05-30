@@ -57,3 +57,8 @@ export async function createRouter(): Promise<Router> {
   if (!worker) throw new Error('Worker not initialized');
   return worker.createRouter({ mediaCodecs });
 }
+
+export function closeWorker(): void {
+  worker?.close();
+  worker = undefined;
+}

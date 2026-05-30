@@ -103,7 +103,11 @@ fi
 # ---------------------------------------------------------------------------
 log "Starting services"
 systemctl daemon-reload
-systemctl enable --now gpn-server.service gpn-web.service
+systemctl enable gpn-server.service gpn-web.service
+# `enable --now` only *starts* a stopped unit; it does NOT restart a running one,
+# so on a re-deploy the old processes would keep serving the old build. Restart
+# explicitly to make the freshly-built server/web actually go live.
+systemctl restart gpn-server.service gpn-web.service
 systemctl reload caddy || systemctl restart caddy
 
 log "Done. Verify:"
