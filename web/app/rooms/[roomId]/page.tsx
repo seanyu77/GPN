@@ -109,8 +109,15 @@ export default function RoomPage() {
 
   return (
     <div style={s.page}>
+      <style>{`
+        @media (max-width: 600px) {
+          .btn-label { display: none; }
+          .room-grid { grid-template-columns: 1fr !important; padding: 8px !important; padding-top: 100px !important; gap: 8px !important; }
+          .room-header { padding: 8px 12px !important; }
+        }
+      `}</style>
       {/* Header */}
-      <header style={s.header}>
+      <header className="room-header" style={s.header}>
         <div style={s.headerLeft}>
           {/* Logo mark */}
           <div style={s.logoMark}>
@@ -135,30 +142,30 @@ export default function RoomPage() {
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            {sharingScreen ? 'Stop sharing' : 'Share screen'}
+            <span className="btn-label">{sharingScreen ? 'Stop sharing' : 'Share screen'}</span>
           </button>
           <button onClick={copyInviteLink} style={s.btnGhost}>
             {copied ? (
               <>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M5 13l4 4L19 7" /></svg>
-                Copied!
+                <span className="btn-label">Copied!</span>
               </>
             ) : (
               <>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                Copy link
+                <span className="btn-label">Copy link</span>
               </>
             )}
           </button>
           <button onClick={() => router.push('/')} style={s.btnLeave}>
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            Leave
+            <span className="btn-label">Leave</span>
           </button>
         </div>
       </header>
 
       {/* Video grid */}
-      <div style={s.grid}>
+      <div className="room-grid" style={s.grid}>
         <VideoTile
           label="You"
           videoRef={localVideoRef}

@@ -72,17 +72,23 @@ export default function Landing() {
   }
 
   return (
-    <main style={styles.main}>
+    <main className="landing-main" style={styles.main}>
       <style>{`
         @keyframes ringPulse {
           0%   { transform: scale(0.2); opacity: 1; }
           60%  { opacity: 0.6; }
           100% { transform: scale(2.4); opacity: 0; }
         }
+        @media (max-width: 768px) {
+          .landing-main { flex-direction: column !important; }
+          .landing-left { padding: 40px 28px !important; flex: none !important; }
+          .landing-left-title { font-size: 28px !important; letter-spacing: -0.5px !important; }
+          .landing-right { width: 100% !important; padding: 32px 28px !important; box-shadow: none !important; }
+        }
       `}</style>
 
       {/* Left panel */}
-      <div style={styles.left}>
+      <div className="landing-left" style={styles.left}>
         {rings.map(r => (
           <div
             key={r.id}
@@ -107,7 +113,7 @@ export default function Landing() {
               <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
             </svg>
           </div>
-          <h2 style={styles.leftTitle}>Video chat,<br />instantly.</h2>
+          <h2 className="landing-left-title" style={styles.leftTitle}>Video chat,<br />instantly.</h2>
           <p style={styles.leftSubtitle}>
             Connect with anyone, anywhere. No downloads, no sign-up, no friction.
           </p>
@@ -123,7 +129,7 @@ export default function Landing() {
       </div>
 
       {/* Right panel */}
-      <div style={styles.right}>
+      <div className="landing-right" style={styles.right}>
         <div style={styles.rightHeader}>
           <h3 style={styles.rightTitle}>Start a video chat now!</h3>
           <p style={styles.rightSubtitle}>
@@ -265,6 +271,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '60px 48px',
     background: '#fff',
     boxShadow: '-20px 0 60px rgba(0,0,0,0.05)',
+    boxSizing: 'border-box',
   },
   rightHeader: {
     marginBottom: 36,
